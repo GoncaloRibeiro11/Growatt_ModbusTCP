@@ -306,6 +306,10 @@ class GrowattData:
     # MOD GEN4 power rate limits per priority mode
     grid_first_discharge_power_rate: int = 0  # 0-100% discharge rate when Grid First (register 3036)
     batt_first_charge_power_rate: int = 0     # 0-100% charge rate when Battery First (register 3047)
+    # MIN TL-XH SOC limits (PR #311 - mapping pending hardware confirmation for 3018)
+    tl_xh_priority_mode: int = 0             # Priority mode for TL-XH (register 3018)
+    batt_first_charge_stopped_soc: int = 0   # Stop charge SOC in Battery First mode (register 3048, 1-100%)
+    grid_first_discharge_stopped_soc: int = 0  # Stop discharge SOC in Grid First mode (register 3067, 1-100%)
 
     time_period_1_enable: int = 0     # 0=Disabled, 1=Enabled
     time_period_1_start: int = 0      # hex-packed (hours*256+minutes, e.g. 06:00 = 0x0600 = 1536)
@@ -2856,6 +2860,16 @@ class GrowattModbus:
                     logger.debug("[TL-XH CTRL] batt_first_charge_stopped_soc=%s%%", data.batt_first_charge_stopped_soc)
             except Exception as e:
                 logger.debug(f"Could not read batt_first_charge_stopped_soc register 3048: {e}")
+
+        # TL-XH Grid First discharge rate (register 3066)
+        if 3066 in holding_map:
+            try:
+                gfdr_regs = self.read_holding_registers(3066, 1)
+                if gfdr_regs is not None and len(gfdr_regs) >= 1:
+                    data.grid_first_discharge_power_rate = int(gfdr_regs[0])
+                    logger.debug("[TL-XH CTRL] grid_first_discharge_power_rate=%s%%", data.grid_first_discharge_power_rate)
+            except Exception as e:
+                logger.debug(f"Could not read grid_first_discharge_power_rate register 3066: {e}")
 
         if 3067 in holding_map:
             try:

@@ -92,8 +92,16 @@ async def async_setup_entry(
             continue
 
         register_num = control_config['register']
+        alt_register = control_config.get('alt_register')
         if register_num not in holding_registers:
-            continue  # Skip if register not in this profile
+            if alt_register is None or alt_register not in holding_registers:
+                continue  # Skip if neither register is in this profile
+            # Use alt_register as the effective write target for this profile
+            effective_config = {**control_config, 'register': alt_register}
+            effective_register = alt_register
+        else:
+            effective_config = control_config
+            effective_register = register_num
 
         # VPP export limit requires live confirmation that the inverter responds to 30200-30201
         if control_name == 'vpp_export_limit_power_rate':
@@ -102,9 +110,9 @@ async def async_setup_entry(
                 continue
 
         entities.append(
-            GrowattGenericNumber(coordinator, config_entry, control_name, control_config)
+            GrowattGenericNumber(coordinator, config_entry, control_name, effective_config)
         )
-        _LOGGER.info("%s control enabled (register %d found)", control_name, register_num)
+        _LOGGER.info("%s control enabled (register %d found)", control_name, effective_register)
 
     if entities:
         _LOGGER.info("Created %d number entities for %s", len(entities), config_entry.data['name'])
