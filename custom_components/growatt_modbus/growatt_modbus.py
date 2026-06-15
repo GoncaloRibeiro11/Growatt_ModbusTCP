@@ -2861,16 +2861,6 @@ class GrowattModbus:
             except Exception as e:
                 logger.debug(f"Could not read batt_first_charge_stopped_soc register 3048: {e}")
 
-        # TL-XH Grid First discharge rate (register 3066)
-        if 3066 in holding_map:
-            try:
-                gfdr_regs = self.read_holding_registers(3066, 1)
-                if gfdr_regs is not None and len(gfdr_regs) >= 1:
-                    data.grid_first_discharge_power_rate = int(gfdr_regs[0])
-                    logger.debug("[TL-XH CTRL] grid_first_discharge_power_rate=%s%%", data.grid_first_discharge_power_rate)
-            except Exception as e:
-                logger.debug(f"Could not read grid_first_discharge_power_rate register 3066: {e}")
-
         if 3067 in holding_map:
             try:
                 gfds_regs = self.read_holding_registers(3067, 1)

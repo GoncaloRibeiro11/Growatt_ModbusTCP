@@ -412,8 +412,6 @@ MIN_TL_XH_3000_10000_V201 = {
                'valid_range': (1, 100), 'desc': 'Charge power rate when Battery First mode is active'},
         3048: {'name': 'batt_first_charge_stopped_soc', 'scale': 1, 'unit': '%', 'access': 'RW',
                'valid_range': (0, 100), 'desc': 'Stop charging SOC when Battery First mode is active'},
-        3066: {'name': 'grid_first_discharge_power_rate', 'scale': 1, 'unit': '%', 'access': 'RW',
-               'valid_range': (1, 100), 'desc': 'Discharge power rate when Grid First mode is active (1-100%)'},
         3067: {'name': 'grid_first_discharge_stopped_soc', 'scale': 1, 'unit': '%', 'access': 'RW',
                'valid_range': (0, 100), 'desc': 'Stop discharging SOC when Grid First mode is active'},
 

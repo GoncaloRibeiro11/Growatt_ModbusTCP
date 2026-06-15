@@ -534,8 +534,7 @@ WRITABLE_REGISTERS = {
     # MOD GEN4 power rate limits for priority modes
     # Scan #228 confirmed: 3036=100 (GridFirstDischargePowerRate), 3047=80 (BatFirstPowerRate)
     'grid_first_discharge_power_rate': {
-        'register': 3036,        # MOD GEN4
-        'alt_register': 3066,    # MIN TL-XH
+        'register': 3036,
         'scale': 1,
         'valid_range': (1, 100),
         'unit': '%',
