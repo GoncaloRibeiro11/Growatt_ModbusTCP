@@ -887,6 +887,7 @@ SENSOR_DEFINITIONS = {
         "icon": "mdi:battery-charging-outline",
         "attr": "priority_mode",
         "entity_category": EntityCategory.DIAGNOSTIC,
+        # TL-XH uses a different field and value map — handled in native_value
         "value_map": {0: "Load First", 1: "Battery First", 2: "Grid First"},
     },
 
@@ -1474,11 +1475,40 @@ class GrowattModbusSensor(CoordinatorEntity, SensorEntity):
                 if not self.coordinator.is_online:
                     return "Offline"
 
-                status = int(getattr(data, "equipment_status", 0) or getattr(data, "status", 0))
+                # Use register existence (not value truthiness) to decide which
+                # status field to read — mirrors the pattern used for energy_today
+                # in v0.9.1 (#307): equipment_status=0 is valid (Waiting), not absent.
+                _client = self.coordinator.modbus_client
+                _has_eq = bool(
+                    _client and _client._find_register_by_name("equipment_status")
+                )
+                status = int(
+                    getattr(data, "equipment_status", 0)
+                    if _has_eq
+                    else getattr(data, "status", 0)
+                )
                 if status in (5, 6):
                     return "On-grid"
                 if status in (7, 8):
                     return "Off-grid"
+                # States 0 (Waiting), 1 (Self-Test), 2 (Reserved), 9 (Bypass)
+                # are transient on-grid states (inverter connected but not actively
+                # discharging — e.g. battery empty, startup, or AC bypass).
+                if status in (0, 1, 2, 9):
+                    return "On-grid"
+                # State 3 (Fault) and 4 (Updating): report as-is rather than Unknown
+                if status == 3:
+                    return "Fault"
+                if status == 4:
+                    return "Updating"
+                _LOGGER.warning(
+                    "[grid_connection_status] Unmapped status value %s (source=%s, raw_status=%s, raw_equipment_status=%s). "
+                    "Reporting 'Unknown' - please report this value so the mapping can be extended.",
+                    status,
+                    "equipment_status" if _has_eq else "status",
+                    getattr(data, "status", None),
+                    getattr(data, "equipment_status", None),
+                )
                 return "Unknown"
             
             return None
@@ -1520,6 +1550,15 @@ class GrowattModbusSensor(CoordinatorEntity, SensorEntity):
         if self._sensor_key == "derating_mode":
             from .const import get_derating_name
             return get_derating_name(int(value))
+
+        # TL-XH uses register 3018 for priority mode with a different field and value map
+        # (0=Load First, 2=Battery First, 3=Grid First) vs SPH (0=Load First, 1=Battery First, 2=Grid First)
+        if self._sensor_key == "priority_mode" and inverter_series.startswith("min_tl_xh_"):
+            tl_xh_value = getattr(data, "tl_xh_priority_mode", None)
+            if tl_xh_value is None:
+                return None
+            tl_xh_map = {0: "Load First", 2: "Battery First", 3: "Grid First"}
+            return tl_xh_map.get(int(tl_xh_value), f"Unknown ({tl_xh_value})")
 
         # Apply value map if defined (returns named string instead of raw integer)
         if "value_map" in self._sensor_def:
