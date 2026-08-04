@@ -252,6 +252,27 @@ class GrowattGenericNumber(CoordinatorEntity, NumberEntity):
         # Write to Modbus register with read-back verification
         register = self._control_config['register']
         try:
+            if self._control_name.startswith("vpp_") and 30100 in self.coordinator.modbus_client.register_map.get("holding_registers", {}):
+                authority_ok, authority_verified = await self.hass.async_add_executor_job(
+                    self.coordinator.modbus_client.write_register_verified,
+                    30100,
+                    1,
+                )
+                if authority_ok:
+                    self.coordinator.track_write(30100, 1, "control_authority")
+                    if not authority_verified:
+                        _LOGGER.warning(
+                            "%s: VPP control authority write succeeded but did not verify",
+                            self._control_name,
+                        )
+                    await asyncio.sleep(0.4)
+                else:
+                    _LOGGER.warning(
+                        "%s: could not enable VPP control authority before writing register %d",
+                        self._control_name,
+                        register,
+                    )
+
             write_ok, verified = await self.hass.async_add_executor_job(
                 self.coordinator.modbus_client.write_register_verified,
                 register,
