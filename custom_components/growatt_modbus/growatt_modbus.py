@@ -309,7 +309,8 @@ class GrowattData:
     # MIN TL-XH SOC limits (PR #311 - mapping pending hardware confirmation for 3018)
     tl_xh_priority_mode: int = 0             # Priority mode for TL-XH (register 3018)
     batt_first_charge_stopped_soc: int = 0   # Stop charge SOC in Battery First mode (register 3048, 1-100%)
-    grid_first_discharge_stopped_soc: int = 0  # Stop discharge SOC in Grid First mode (register 3067, 1-100%)
+    grid_first_discharge_stopped_soc: int = 0  # Stop discharge SOC in Grid First mode (register 3037, 1-100%)
+    ongrid_grid_first_discharge_stopped_soc: int = 0  # Stop discharge SOC when on-grid + Grid First (register 3067)
 
     time_period_1_enable: int = 0     # 0=Disabled, 1=Enabled
     time_period_1_start: int = 0      # hex-packed (hours*256+minutes, e.g. 06:00 = 0x0600 = 1536)
@@ -2861,14 +2862,23 @@ class GrowattModbus:
             except Exception as e:
                 logger.debug(f"Could not read batt_first_charge_stopped_soc register 3048: {e}")
 
-        if 3067 in holding_map:
+        if 3037 in holding_map:
             try:
-                gfds_regs = self.read_holding_registers(3067, 1)
+                gfds_regs = self.read_holding_registers(3037, 1)
                 if gfds_regs is not None and len(gfds_regs) >= 1:
                     data.grid_first_discharge_stopped_soc = int(gfds_regs[0])
                     logger.debug("[TL-XH CTRL] grid_first_discharge_stopped_soc=%s%%", data.grid_first_discharge_stopped_soc)
             except Exception as e:
-                logger.debug(f"Could not read grid_first_discharge_stopped_soc register 3067: {e}")
+                logger.debug(f"Could not read grid_first_discharge_stopped_soc register 3037: {e}")
+
+        if 3067 in holding_map:
+            try:
+                gfds_regs = self.read_holding_registers(3067, 1)
+                if gfds_regs is not None and len(gfds_regs) >= 1:
+                    data.ongrid_grid_first_discharge_stopped_soc = int(gfds_regs[0])
+                    logger.debug("[TL-XH CTRL] ongrid_grid_first_discharge_stopped_soc=%s%%", data.ongrid_grid_first_discharge_stopped_soc)
+            except Exception as e:
+                logger.debug(f"Could not read ongrid_grid_first_discharge_stopped_soc register 3067: {e}")
 
         # MOD TL3-XH TOU slots 5-9 (registers 3050-3059)
         if 3050 in holding_map:
