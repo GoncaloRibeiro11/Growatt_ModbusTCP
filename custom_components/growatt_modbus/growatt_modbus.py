@@ -311,6 +311,10 @@ class GrowattData:
     batt_first_charge_stopped_soc: int = 0   # Stop charge SOC in Battery First mode (register 3048, 1-100%)
     grid_first_discharge_stopped_soc: int = 0  # Stop discharge SOC in Grid First mode (register 3037, 1-100%)
     ongrid_grid_first_discharge_stopped_soc: int = 0  # Stop discharge SOC when on-grid + Grid First (register 3067)
+    vpp_charge_cutoff_soc: int = 100  # VPP stop charging SOC (register 30404)
+    vpp_discharge_cutoff_soc: int = 10  # VPP stop online discharge SOC (register 30405)
+    vpp_load_priority_discharge_cutoff_soc: int = 10  # VPP stop load-priority discharge SOC (register 30406)
+    vpp_offgrid_discharge_soc: int = 10  # VPP stop offline discharge SOC (register 30475)
 
     time_period_1_enable: int = 0     # 0=Disabled, 1=Enabled
     time_period_1_start: int = 0      # hex-packed (hours*256+minutes, e.g. 06:00 = 0x0600 = 1536)
@@ -2879,6 +2883,34 @@ class GrowattModbus:
                     logger.debug("[TL-XH CTRL] ongrid_grid_first_discharge_stopped_soc=%s%%", data.ongrid_grid_first_discharge_stopped_soc)
             except Exception as e:
                 logger.debug(f"Could not read ongrid_grid_first_discharge_stopped_soc register 3067: {e}")
+
+        if any(reg in holding_map for reg in [30404, 30405, 30406]):
+            try:
+                vpp_soc_regs = self.read_holding_registers(30404, 3)
+                if vpp_soc_regs is not None and len(vpp_soc_regs) >= 3:
+                    if 30404 in holding_map:
+                        data.vpp_charge_cutoff_soc = int(vpp_soc_regs[0])
+                    if 30405 in holding_map:
+                        data.vpp_discharge_cutoff_soc = int(vpp_soc_regs[1])
+                    if 30406 in holding_map:
+                        data.vpp_load_priority_discharge_cutoff_soc = int(vpp_soc_regs[2])
+                    logger.debug(
+                        "[VPP SOC] charge=%s%%, discharge=%s%%, load_priority_discharge=%s%%",
+                        data.vpp_charge_cutoff_soc,
+                        data.vpp_discharge_cutoff_soc,
+                        data.vpp_load_priority_discharge_cutoff_soc,
+                    )
+            except Exception as e:
+                logger.debug(f"Could not read VPP SOC cutoff registers 30404-30406: {e}")
+
+        if 30475 in holding_map:
+            try:
+                offgrid_soc_regs = self.read_holding_registers(30475, 1)
+                if offgrid_soc_regs is not None and len(offgrid_soc_regs) >= 1:
+                    data.vpp_offgrid_discharge_soc = int(offgrid_soc_regs[0])
+                    logger.debug("[VPP SOC] offgrid_discharge=%s%%", data.vpp_offgrid_discharge_soc)
+            except Exception as e:
+                logger.debug(f"Could not read VPP offgrid discharge SOC register 30475: {e}")
 
         # MOD TL3-XH TOU slots 5-9 (registers 3050-3059)
         if 3050 in holding_map:

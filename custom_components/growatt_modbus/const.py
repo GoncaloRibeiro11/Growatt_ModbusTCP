@@ -568,6 +568,34 @@ WRITABLE_REGISTERS = {
         'unit': '%',
         'desc': 'SOC level to stop battery discharge when on-grid and Grid First mode is active'
     },
+    'vpp_charge_cutoff_soc': {
+        'register': 30404,
+        'scale': 1,
+        'valid_range': (70, 100),
+        'unit': '%',
+        'desc': 'VPP charging cut-off SOC'
+    },
+    'vpp_discharge_cutoff_soc': {
+        'register': 30405,
+        'scale': 1,
+        'valid_range': (10, 30),
+        'unit': '%',
+        'desc': 'VPP online discharge cut-off SOC'
+    },
+    'vpp_load_priority_discharge_cutoff_soc': {
+        'register': 30406,
+        'scale': 1,
+        'valid_range': (10, 20),
+        'unit': '%',
+        'desc': 'VPP load-priority discharge cut-off SOC'
+    },
+    'vpp_offgrid_discharge_soc': {
+        'register': 30475,
+        'scale': 1,
+        'valid_range': (10, 30),
+        'unit': '%',
+        'desc': 'VPP offline discharge cut-off SOC'
+    },
 
     # MOD GEN4 grid-charge prerequisite gate (must be Enabled for TOU writes to persist)
     'allow_grid_charge': {
