@@ -1390,11 +1390,13 @@ class GrowattModbusCoordinator(DataUpdateCoordinator[GrowattData]):
             }
 
         elif device_type == DEVICE_TYPE_LOAD:
+            load_name = "Backup Box" if "TL_XH" in self._register_map_key else "Load"
+            load_model = "Backup Box" if "TL_XH" in self._register_map_key else "Load Management"
             return {
                 "identifiers": {(DOMAIN, f"{entry_id}_load")},
-                "name": f"{base_name} Load",
+                "name": f"{base_name} {load_name}",
                 "manufacturer": "Growatt",
-                "model": "Load Management",
+                "model": load_model,
                 "via_device": via_device,
             }
 

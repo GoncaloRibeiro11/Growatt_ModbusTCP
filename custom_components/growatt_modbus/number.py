@@ -50,6 +50,14 @@ TL_XH_REQUIRED_PRIORITY_MODE = {
     'grid_first_discharge_stopped_soc': (3, 'Grid First'),
 }
 
+MIN_TL_XH_HIDDEN_NUMBER_CONTROLS = {
+    'grid_first_discharge_power_rate',
+    'batt_first_charge_power_rate',
+    'vpp_charge_cutoff_soc',
+    'vpp_discharge_cutoff_soc',
+    'vpp_load_priority_discharge_cutoff_soc',
+}
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -116,6 +124,13 @@ async def async_setup_entry(
     for control_name, control_config in WRITABLE_REGISTERS.items():
         if 'options' in control_config:
             continue  # Skip select controls
+
+        if (
+            register_map_name == "MIN_TL_XH_3000_10000_V201"
+            and control_name in MIN_TL_XH_HIDDEN_NUMBER_CONTROLS
+        ):
+            continue
+
         # Time period start/end use hex-packed encoding — handled as TimeEntity in time.py
         if 'time_period' in control_name and control_name.endswith(('_start', '_end')):
             continue
@@ -177,6 +192,9 @@ class GrowattGenericNumber(CoordinatorEntity, NumberEntity):
             'max_output_power_rate': 'Max Output Power Rate',
             'vpp_export_limit_power_rate': 'VPP Export Limit Power Rate',
             'load_first_battery_minimum_soc': 'Load First Battery Minimum SOC',
+            'grid_first_discharge_stopped_soc': 'Min Discharge SOC',
+            'batt_first_charge_stopped_soc': 'Charge SOC',
+            'vpp_offgrid_discharge_soc': 'Min Off-Grid SOC',
         }
         friendly_name = friendly_overrides.get(control_name, control_name.replace('_', ' ').title())
         self._attr_name = friendly_name
