@@ -1401,11 +1401,13 @@ class GrowattModbusCoordinator(DataUpdateCoordinator[GrowattData]):
             }
 
         elif device_type == DEVICE_TYPE_BATTERY:
+            battery_name = "APX Battery" if "TL_XH" in self._register_map_key else "Battery"
+            battery_model = "APX Battery" if "TL_XH" in self._register_map_key else "Battery Storage"
             return {
                 "identifiers": {(DOMAIN, f"{entry_id}_battery")},
-                "name": f"{base_name} Battery",
+                "name": f"{base_name} {battery_name}",
                 "manufacturer": "Growatt",
-                "model": "Battery Storage",
+                "model": battery_model,
                 "via_device": via_device,
             }
 
