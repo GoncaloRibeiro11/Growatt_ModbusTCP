@@ -7,6 +7,26 @@ from .vpp_v201 import (
     VPP_V201_BATTERY2, VPP_V201_HOLDING_1P,
 )
 
+BACKUP_BOX_INPUT_REGISTERS = {
+    # Backup Box (SYN) data - V1.39 input block 3281-3316, installation flag 3323.
+    3281: {'name': 'backup_box_status', 'scale': 1, 'unit': '', 'desc': 'Backup Box status'},
+    3282: {'name': 'backup_box_work_mode', 'scale': 1, 'unit': '', 'desc': 'Backup Box work mode'},
+    3283: {'name': 'backup_box_grid_voltage', 'scale': 0.1, 'unit': 'V', 'desc': 'Backup Box grid voltage'},
+    3284: {'name': 'backup_box_grid_power_high', 'scale': 1, 'unit': '', 'pair': 3285},
+    3285: {'name': 'backup_box_grid_power_low', 'scale': 1, 'unit': '', 'pair': 3284,
+           'combined_scale': 0.1, 'combined_unit': 'W', 'signed': True},
+    3286: {'name': 'backup_box_load_power_high', 'scale': 1, 'unit': '', 'pair': 3287},
+    3287: {'name': 'backup_box_load_power_low', 'scale': 1, 'unit': '', 'pair': 3286,
+           'combined_scale': 0.1, 'combined_unit': 'W'},
+    3288: {'name': 'backup_box_temperature', 'scale': 0.1, 'unit': '°C', 'signed': True,
+           'desc': 'Backup Box internal temperature'},
+    3289: {'name': 'backup_box_error_code', 'scale': 1, 'unit': '', 'desc': 'Backup Box error code'},
+    3290: {'name': 'backup_box_warning_code', 'scale': 1, 'unit': '', 'desc': 'Backup Box warning code'},
+    3291: {'name': 'backup_box_relay', 'scale': 1, 'unit': '', 'desc': 'Backup Box relay state'},
+    3292: {'name': 'backup_box_bypass', 'scale': 1, 'unit': '', 'desc': 'Backup Box bypass state'},
+    3323: {'name': 'backup_box_installed', 'scale': 1, 'unit': '', 'desc': 'Backup Box installation flag'},
+}
+
 # TL-XH 3000-10000 (Single-phase hybrid with battery, 3-10kW)
 TL_XH_3000_10000 = {
     'name': 'TL-XH 3000-10000',
@@ -102,6 +122,8 @@ TL_XH_3000_10000 = {
         104: {'name': 'derating_mode', 'scale': 1, 'unit': ''},
         105: {'name': 'fault_code', 'scale': 1, 'unit': ''},
         112: {'name': 'warning_code', 'scale': 1, 'unit': ''},
+
+        **BACKUP_BOX_INPUT_REGISTERS,
     },
     'holding_registers': {
         0: {'name': 'on_off', 'scale': 1, 'unit': '', 'access': 'RW', 'desc': '0=Off, 1=On'},
@@ -361,23 +383,7 @@ MIN_TL_XH_3000_10000_V201 = {
         3180: {'name': 'charge_power_high', 'scale': 1, 'unit': '', 'pair': 3181, 'desc': 'Battery charge power HIGH (unsigned)'},
         3181: {'name': 'charge_power_low', 'scale': 1, 'unit': '', 'pair': 3180, 'combined_scale': 0.1, 'combined_unit': 'W', 'desc': 'Battery charge power (unsigned, positive=charge)'},
 
-        # Backup Box (SYN) data - V1.39 input block 3281-3316, installation flag 3323.
-        3281: {'name': 'backup_box_status', 'scale': 1, 'unit': '', 'desc': 'Backup Box status'},
-        3282: {'name': 'backup_box_work_mode', 'scale': 1, 'unit': '', 'desc': 'Backup Box work mode'},
-        3283: {'name': 'backup_box_grid_voltage', 'scale': 0.1, 'unit': 'V', 'desc': 'Backup Box grid voltage'},
-        3284: {'name': 'backup_box_grid_power_high', 'scale': 1, 'unit': '', 'pair': 3285},
-        3285: {'name': 'backup_box_grid_power_low', 'scale': 1, 'unit': '', 'pair': 3284,
-               'combined_scale': 0.1, 'combined_unit': 'W', 'signed': True},
-        3286: {'name': 'backup_box_load_power_high', 'scale': 1, 'unit': '', 'pair': 3287},
-        3287: {'name': 'backup_box_load_power_low', 'scale': 1, 'unit': '', 'pair': 3286,
-               'combined_scale': 0.1, 'combined_unit': 'W'},
-        3288: {'name': 'backup_box_temperature', 'scale': 0.1, 'unit': '°C', 'signed': True,
-               'desc': 'Backup Box internal temperature'},
-        3289: {'name': 'backup_box_error_code', 'scale': 1, 'unit': '', 'desc': 'Backup Box error code'},
-        3290: {'name': 'backup_box_warning_code', 'scale': 1, 'unit': '', 'desc': 'Backup Box warning code'},
-        3291: {'name': 'backup_box_relay', 'scale': 1, 'unit': '', 'desc': 'Backup Box relay state'},
-        3292: {'name': 'backup_box_bypass', 'scale': 1, 'unit': '', 'desc': 'Backup Box bypass state'},
-        3323: {'name': 'backup_box_installed', 'scale': 1, 'unit': '', 'desc': 'Backup Box installation flag'},
+        **BACKUP_BOX_INPUT_REGISTERS,
 
         # === VPP V2.01 BATTERY RANGE (31000+) ===
 

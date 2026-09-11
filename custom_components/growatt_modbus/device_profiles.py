@@ -336,7 +336,7 @@ INVERTER_PROFILES = {
         "has_pv3": True,
         "has_battery": True,
         "max_power_kw": 10.0,
-        "sensors": HYBRID_1P_SENSORS | PV3_SENSORS,
+        "sensors": HYBRID_1P_SENSORS | PV3_SENSORS | BACKUP_BOX_SENSORS,
     },
     
     "tl_xh_us_3000_10000": {
@@ -347,7 +347,7 @@ INVERTER_PROFILES = {
         "has_pv3": True,
         "has_battery": True,
         "max_power_kw": 10.0,
-        "sensors": HYBRID_1P_SENSORS | PV3_SENSORS,
+        "sensors": HYBRID_1P_SENSORS | PV3_SENSORS | BACKUP_BOX_SENSORS,
     },
 
     # TL-XH V2.01 VPP Protocol
@@ -360,7 +360,7 @@ INVERTER_PROFILES = {
         "has_battery": True,
         "max_power_kw": 10.0,
         "protocol_version": "v2.01",
-        "sensors": HYBRID_1P_SENSORS | PV3_SENSORS,
+        "sensors": HYBRID_1P_SENSORS | PV3_SENSORS | BACKUP_BOX_SENSORS,
     },
 
     "tl_xh_us_3000_10000_v201": {
@@ -372,7 +372,7 @@ INVERTER_PROFILES = {
         "has_battery": True,
         "max_power_kw": 10.0,
         "protocol_version": "v2.01",
-        "sensors": HYBRID_1P_SENSORS | PV3_SENSORS,
+        "sensors": HYBRID_1P_SENSORS | PV3_SENSORS | BACKUP_BOX_SENSORS,
     },
 
     # MIN TL-XH Hybrid - Uses MIN 3000+ range with VPP battery
