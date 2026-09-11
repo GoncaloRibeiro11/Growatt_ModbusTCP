@@ -45,6 +45,11 @@ GROUPED_REGISTER_DEFAULTS = {
     'vpp_load_priority_discharge_cutoff_soc': 10,
 }
 
+TL_XH_REQUIRED_PRIORITY_MODE = {
+    'batt_first_charge_stopped_soc': (2, 'Battery First'),
+    'grid_first_discharge_stopped_soc': (3, 'Grid First'),
+}
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -276,6 +281,9 @@ class GrowattGenericNumber(CoordinatorEntity, NumberEntity):
         # Write to Modbus register with read-back verification
         register = self._control_config['register']
         try:
+            if not await self._async_set_required_priority_mode():
+                return
+
             if self._control_name.startswith("vpp_") and 30100 in self.coordinator.modbus_client.register_map.get("holding_registers", {}):
                 authority_ok, authority_verified = await self.hass.async_add_executor_job(
                     self.coordinator.modbus_client.write_register_verified,
@@ -320,6 +328,57 @@ class GrowattGenericNumber(CoordinatorEntity, NumberEntity):
                 )
             self.coordinator.track_write(register, raw_value, self._control_name)
             await self.coordinator.async_request_refresh()
+
+    async def _async_set_required_priority_mode(self) -> bool:
+        """Switch MIN/TL-XH to the priority mode required by this SOC setting."""
+        required = TL_XH_REQUIRED_PRIORITY_MODE.get(self._control_name)
+        holding_registers = self.coordinator.modbus_client.register_map.get('holding_registers', {})
+        if required is None or 3018 not in holding_registers:
+            return True
+
+        required_value, required_name = required
+        current_value = getattr(self.coordinator.data, 'tl_xh_priority_mode', None) if self.coordinator.data else None
+        if current_value == required_value:
+            return True
+
+        try:
+            write_ok, verified = await self.hass.async_add_executor_job(
+                self.coordinator.modbus_client.write_register_verified,
+                3018,
+                required_value,
+            )
+        except ModbusWriteError:
+            _LOGGER.error(
+                "Failed to switch TL-XH priority mode to %s before writing %s",
+                required_name,
+                self._control_name,
+            )
+            return False
+
+        if not write_ok:
+            _LOGGER.warning(
+                "Could not switch TL-XH priority mode to %s before writing %s",
+                required_name,
+                self._control_name,
+            )
+            return False
+
+        self.coordinator.track_write(3018, required_value, 'tl_xh_priority_mode')
+        if verified:
+            _LOGGER.info(
+                "Switched TL-XH priority mode to %s before writing %s",
+                required_name,
+                self._control_name,
+            )
+        else:
+            _LOGGER.warning(
+                "TL-XH priority mode switch to %s was not verified before writing %s",
+                required_name,
+                self._control_name,
+            )
+
+        await asyncio.sleep(0.8)
+        return True
 
     async def _async_write_grouped_value(self, raw_value: int) -> tuple | None:
         """Write this control as part of a small consecutive register block."""
