@@ -561,13 +561,6 @@ WRITABLE_REGISTERS = {
         'unit': '%',
         'desc': 'SOC level to stop battery discharge when Grid First mode is active'
     },
-    'ongrid_grid_first_discharge_stopped_soc': {
-        'register': 3067,
-        'scale': 1,
-        'valid_range': (0, 100),
-        'unit': '%',
-        'desc': 'SOC level to stop battery discharge when on-grid and Grid First mode is active'
-    },
     'vpp_charge_cutoff_soc': {
         'register': 30404,
         'scale': 1,

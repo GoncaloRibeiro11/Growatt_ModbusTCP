@@ -424,8 +424,8 @@ MIN_TL_XH_3000_10000_V201 = {
                 'valid_range': (10, 20), 'desc': 'VPP load-priority discharge cut-off SOC'},
         30475: {'name': 'vpp_offgrid_discharge_soc', 'scale': 1, 'unit': '%', 'access': 'RW',
                 'valid_range': (10, 30), 'desc': 'VPP offline discharge cut-off SOC'},
-        3067: {'name': 'ongrid_grid_first_discharge_stopped_soc', 'scale': 1, 'unit': '%', 'access': 'RW',
-               'valid_range': (0, 100), 'desc': 'Stop discharging SOC when on-grid and Grid First mode is active'},
+        3067: {'name': 'ongrid_grid_first_discharge_stopped_soc', 'scale': 1, 'unit': '%', 'access': 'R',
+               'valid_range': (0, 100), 'desc': 'Read-back value for on-grid Grid First stop discharge SOC'},
 
         # Safety/compliance diagnostic registers (read-only, Issue #282)
         235: {'name': 'ntognd_detect',     'scale': 1, 'unit': '', 'access': 'R', 'desc': '0=Disable, 1=Enable — NToGND detection'},

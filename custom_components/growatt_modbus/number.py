@@ -311,11 +311,6 @@ class GrowattGenericNumber(CoordinatorEntity, NumberEntity):
             return
 
         if write_ok:
-            mirror_ok, mirror_verified = await self._async_write_mirrored_value(raw_value)
-            verified = verified and mirror_verified
-            if not mirror_ok:
-                _LOGGER.warning("%s: primary write succeeded but mirrored SOC write failed", self._control_name)
-
             if verified:
                 _LOGGER.info("Set %s to %.1f (raw=%d, verified)", self._control_name, value, raw_value)
             else:
@@ -325,45 +320,6 @@ class GrowattGenericNumber(CoordinatorEntity, NumberEntity):
                 )
             self.coordinator.track_write(register, raw_value, self._control_name)
             await self.coordinator.async_request_refresh()
-
-    async def _async_write_mirrored_value(self, raw_value: int) -> tuple:
-        """Keep TL-XH Grid First SOC aliases in sync when both are exposed."""
-        holding_registers = self.coordinator.modbus_client.register_map.get('holding_registers', {})
-
-        if (
-            self._control_name == 'grid_first_discharge_stopped_soc'
-            and 3067 in holding_registers
-        ):
-            return await self.hass.async_add_executor_job(
-                self.coordinator.modbus_client.write_register_verified,
-                3067,
-                raw_value,
-            )
-
-        if (
-            self._control_name == 'ongrid_grid_first_discharge_stopped_soc'
-            and 3036 in holding_registers
-            and 3037 in holding_registers
-        ):
-            current_values = await self.hass.async_add_executor_job(
-                self.coordinator.modbus_client.read_holding_registers,
-                3036,
-                2,
-            )
-            if current_values is None:
-                data = self.coordinator.data
-                power_rate = int(getattr(data, 'grid_first_discharge_power_rate', 100)) if data else 100
-                values = [power_rate, raw_value]
-            else:
-                values = [int(current_values[0]), raw_value]
-
-            return await self.hass.async_add_executor_job(
-                self.coordinator.modbus_client.write_registers_verified,
-                3036,
-                values,
-            )
-
-        return (True, True)
 
     async def _async_write_grouped_value(self, raw_value: int) -> tuple | None:
         """Write this control as part of a small consecutive register block."""
