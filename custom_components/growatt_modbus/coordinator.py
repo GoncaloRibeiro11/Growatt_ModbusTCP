@@ -1390,24 +1390,20 @@ class GrowattModbusCoordinator(DataUpdateCoordinator[GrowattData]):
             }
 
         elif device_type == DEVICE_TYPE_LOAD:
-            load_name = "Backup Box" if "TL_XH" in self._register_map_key else "Load"
-            load_model = "Backup Box" if "TL_XH" in self._register_map_key else "Load Management"
             return {
                 "identifiers": {(DOMAIN, f"{entry_id}_load")},
-                "name": f"{base_name} {load_name}",
+                "name": f"{base_name} Load",
                 "manufacturer": "Growatt",
-                "model": load_model,
+                "model": "Load Management",
                 "via_device": via_device,
             }
 
         elif device_type == DEVICE_TYPE_BATTERY:
-            battery_name = "APX Battery" if "TL_XH" in self._register_map_key else "Battery"
-            battery_model = "APX Battery" if "TL_XH" in self._register_map_key else "Battery Storage"
             return {
                 "identifiers": {(DOMAIN, f"{entry_id}_battery")},
-                "name": f"{base_name} {battery_name}",
+                "name": f"{base_name} Battery",
                 "manufacturer": "Growatt",
-                "model": battery_model,
+                "model": "Battery Storage",
                 "via_device": via_device,
             }
 
