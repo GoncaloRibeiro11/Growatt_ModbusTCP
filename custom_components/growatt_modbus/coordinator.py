@@ -29,6 +29,7 @@ from .const import (
     DEVICE_TYPE_GRID,
     DEVICE_TYPE_LOAD,
     DEVICE_TYPE_BATTERY,
+    DEVICE_TYPE_BACKUP_BOX,
 )
 
 from .const import REGISTER_MAPS
@@ -1404,6 +1405,15 @@ class GrowattModbusCoordinator(DataUpdateCoordinator[GrowattData]):
                 "name": f"{base_name} Battery",
                 "manufacturer": "Growatt",
                 "model": "Battery Storage",
+                "via_device": via_device,
+            }
+
+        elif device_type == DEVICE_TYPE_BACKUP_BOX:
+            return {
+                "identifiers": {(DOMAIN, f"{entry_id}_backup_box")},
+                "name": f"{base_name} Backup Box",
+                "manufacturer": "Growatt",
+                "model": "SYN Backup Box",
                 "via_device": via_device,
             }
 

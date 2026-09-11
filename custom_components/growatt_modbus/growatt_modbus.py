@@ -316,6 +316,19 @@ class GrowattData:
     vpp_load_priority_discharge_cutoff_soc: int = 10  # VPP stop load-priority discharge SOC (register 30406)
     vpp_offgrid_discharge_soc: int = 10  # VPP stop offline discharge SOC (register 30475)
 
+    # TL-XH Backup Box (input registers 3281-3316, presence flag 3323)
+    backup_box_installed: Optional[int] = None
+    backup_box_status: Optional[int] = None
+    backup_box_work_mode: Optional[int] = None
+    backup_box_grid_voltage: Optional[float] = None
+    backup_box_grid_power: Optional[float] = None
+    backup_box_load_power: Optional[float] = None
+    backup_box_temperature: Optional[float] = None
+    backup_box_error_code: Optional[int] = None
+    backup_box_warning_code: Optional[int] = None
+    backup_box_relay: Optional[int] = None
+    backup_box_bypass: Optional[int] = None
+
     time_period_1_enable: int = 0     # 0=Disabled, 1=Enabled
     time_period_1_start: int = 0      # hex-packed (hours*256+minutes, e.g. 06:00 = 0x0600 = 1536)
     time_period_1_end: int = 0        # hex-packed
@@ -2990,6 +3003,41 @@ class GrowattModbus:
                     logger.debug("[VPP SOC] offgrid_discharge=%s%%", data.vpp_offgrid_discharge_soc)
             except Exception as e:
                 logger.debug(f"Could not read VPP offgrid discharge SOC register 30475: {e}")
+
+        backup_box_fields = [
+            ('backup_box_installed', 'backup_box_installed'),
+            ('backup_box_status', 'backup_box_status'),
+            ('backup_box_work_mode', 'backup_box_work_mode'),
+            ('backup_box_grid_voltage', 'backup_box_grid_voltage'),
+            ('backup_box_grid_power_low', 'backup_box_grid_power'),
+            ('backup_box_load_power_low', 'backup_box_load_power'),
+            ('backup_box_temperature', 'backup_box_temperature'),
+            ('backup_box_error_code', 'backup_box_error_code'),
+            ('backup_box_warning_code', 'backup_box_warning_code'),
+            ('backup_box_relay', 'backup_box_relay'),
+            ('backup_box_bypass', 'backup_box_bypass'),
+        ]
+        for register_name, attr_name in backup_box_fields:
+            addr = self._find_register_by_name(register_name)
+            if addr:
+                value = self._get_register_value(addr)
+                if value is not None:
+                    setattr(data, attr_name, value)
+
+        if data.backup_box_installed:
+            logger.debug(
+                "[BACKUP BOX] status=%s work_mode=%s grid=%sV/%sW load=%sW relay=%s bypass=%s temp=%sC error=%s warning=%s",
+                data.backup_box_status,
+                data.backup_box_work_mode,
+                data.backup_box_grid_voltage,
+                data.backup_box_grid_power,
+                data.backup_box_load_power,
+                data.backup_box_relay,
+                data.backup_box_bypass,
+                data.backup_box_temperature,
+                data.backup_box_error_code,
+                data.backup_box_warning_code,
+            )
 
         # MOD TL3-XH TOU slots 5-9 (registers 3050-3059)
         if 3050 in holding_map:

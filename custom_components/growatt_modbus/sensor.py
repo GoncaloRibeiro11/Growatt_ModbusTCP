@@ -924,6 +924,72 @@ SENSOR_DEFINITIONS = {
         "icon": "mdi:alert",
         "attr": "warning_code",
     },
+    "backup_box_bypass": {
+        "name": "Backup Box Bypass",
+        "icon": "mdi:transit-connection-horizontal",
+        "attr": "backup_box_bypass",
+        "value_map": {0: "Off", 1: "On"},
+    },
+    "backup_box_error_code": {
+        "name": "Backup Box Error Code",
+        "icon": "mdi:alert-circle",
+        "attr": "backup_box_error_code",
+    },
+    "backup_box_grid_power": {
+        "name": "Backup Box Grid Power",
+        "icon": "mdi:transmission-tower",
+        "device_class": SensorDeviceClass.POWER,
+        "state_class": SensorStateClass.MEASUREMENT,
+        "unit": UnitOfPower.WATT,
+        "attr": "backup_box_grid_power",
+    },
+    "backup_box_grid_voltage": {
+        "name": "Backup Box Grid Voltage",
+        "icon": "mdi:transmission-tower",
+        "device_class": SensorDeviceClass.VOLTAGE,
+        "state_class": SensorStateClass.MEASUREMENT,
+        "unit": UnitOfElectricPotential.VOLT,
+        "attr": "backup_box_grid_voltage",
+    },
+    "backup_box_load_power": {
+        "name": "Backup Box Load Power",
+        "icon": "mdi:home-lightning-bolt",
+        "device_class": SensorDeviceClass.POWER,
+        "state_class": SensorStateClass.MEASUREMENT,
+        "unit": UnitOfPower.WATT,
+        "attr": "backup_box_load_power",
+    },
+    "backup_box_relay": {
+        "name": "Backup Box Relay",
+        "icon": "mdi:transit-connection-horizontal",
+        "attr": "backup_box_relay",
+        "value_map": {0: "Open", 1: "Closed"},
+    },
+    "backup_box_status": {
+        "name": "Backup Box Status",
+        "icon": "mdi:arrow-decision",
+        "attr": "backup_box_status",
+        "value_map": {0: "Standby", 1: "Normal", 2: "Off-Grid", 3: "Fault"},
+    },
+    "backup_box_temperature": {
+        "name": "Backup Box Temperature",
+        "icon": "mdi:thermometer",
+        "device_class": SensorDeviceClass.TEMPERATURE,
+        "state_class": SensorStateClass.MEASUREMENT,
+        "unit": UnitOfTemperature.CELSIUS,
+        "attr": "backup_box_temperature",
+    },
+    "backup_box_warning_code": {
+        "name": "Backup Box Warning Code",
+        "icon": "mdi:alert",
+        "attr": "backup_box_warning_code",
+    },
+    "backup_box_work_mode": {
+        "name": "Backup Box Work Mode",
+        "icon": "mdi:home-switch",
+        "attr": "backup_box_work_mode",
+        "value_map": {0: "On-Grid", 1: "Off-Grid", 2: "Bypass"},
+    },
 
     # Safety/compliance read-only diagnostic registers 235-238 (Issue #282).
     # These are installer/grid-compliance controls. Writing them is intentionally

@@ -656,6 +656,7 @@ DEVICE_TYPE_SOLAR = "solar"
 DEVICE_TYPE_GRID = "grid"
 DEVICE_TYPE_LOAD = "load"
 DEVICE_TYPE_BATTERY = "battery"
+DEVICE_TYPE_BACKUP_BOX = "backup_box"
 
 # Sensor to Device Mapping
 # Each sensor is assigned to a logical device for better organization
@@ -748,6 +749,14 @@ SENSOR_DEVICE_MAP = {
         'bms_module_num', 'bms_battery_count',
         'bms_max_soc', 'bms_min_soc',
         'bms_gauge_rm', 'bms_gauge_fcc', 'bms_fw_version', 'bms_delta_volt',
+    },
+
+    DEVICE_TYPE_BACKUP_BOX: {
+        'backup_box_bypass', 'backup_box_error_code',
+        'backup_box_grid_power', 'backup_box_grid_voltage',
+        'backup_box_load_power', 'backup_box_relay',
+        'backup_box_status', 'backup_box_temperature',
+        'backup_box_warning_code', 'backup_box_work_mode',
     },
 }
 

@@ -76,6 +76,14 @@ BMS_SENSORS: Set[str] = {
     "bms_max_soc", "bms_min_soc",
 }
 
+BACKUP_BOX_SENSORS: Set[str] = {
+    "backup_box_bypass", "backup_box_error_code",
+    "backup_box_grid_power", "backup_box_grid_voltage",
+    "backup_box_load_power", "backup_box_relay",
+    "backup_box_status", "backup_box_temperature",
+    "backup_box_warning_code", "backup_box_work_mode",
+}
+
 TEMPERATURE_SENSORS: Set[str] = {
     "inverter_temp", "ipm_temp", "boost_temp",
 }
@@ -388,6 +396,7 @@ INVERTER_PROFILES = {
             PV_DC_ENERGY_SENSORS |
             ENERGY_BREAKDOWN_SENSORS |
             BATTERY_SENSORS |
+            BACKUP_BOX_SENSORS |
             TEMPERATURE_SENSORS |
             STATUS_SENSORS
         ),

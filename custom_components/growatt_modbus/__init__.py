@@ -60,6 +60,7 @@ def _migrate_entity_ids(hass: HomeAssistant, entry: ConfigEntry) -> None:
         DEVICE_TYPE_GRID,
         DEVICE_TYPE_LOAD,
         DEVICE_TYPE_BATTERY,
+        DEVICE_TYPE_BACKUP_BOX,
     )
 
     _DEVICE_SUFFIX = {
@@ -67,6 +68,7 @@ def _migrate_entity_ids(hass: HomeAssistant, entry: ConfigEntry) -> None:
         DEVICE_TYPE_GRID: "Grid",
         DEVICE_TYPE_LOAD: "Load",
         DEVICE_TYPE_BATTERY: "Battery",
+        DEVICE_TYPE_BACKUP_BOX: "Backup Box",
     }
 
     ent_name = entry.data['name']
