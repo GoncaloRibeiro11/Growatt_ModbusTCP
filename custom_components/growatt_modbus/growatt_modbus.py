@@ -1765,6 +1765,85 @@ class GrowattModbus:
         )
         return (True, False)
 
+    def write_registers_verified(self, register: int, values: list) -> tuple:
+        """Write consecutive holding registers with read-back verification and retry.
+
+        Some Growatt settings are applied as small blocks by the inverter firmware.
+        Writing the SOC register alone can be accepted briefly and then reverted,
+        while writing the related power/SOC block with function 0x10 persists.
+        """
+        expected = [value & 0xFFFF for value in values]
+
+        for attempt in range(WRITE_VERIFY_MAX_RETRIES):
+            try:
+                self.write_registers(register, expected)
+            except ModbusWriteError:
+                if attempt == 0:
+                    raise
+                logger.warning(
+                    "[WRITE_MULTI VERIFY] Retry %d/%d for registers %d-%d failed (Modbus error)",
+                    attempt + 1,
+                    WRITE_VERIFY_MAX_RETRIES,
+                    register,
+                    register + len(expected) - 1,
+                )
+                return (False, False)
+
+            time.sleep(WRITE_VERIFY_DELAY)
+
+            read_back = self.read_holding_registers(register, len(expected))
+            if read_back is None:
+                logger.debug(
+                    "[WRITE_MULTI VERIFY] Could not read back registers %d-%d (comm error) — treating as unverifiable",
+                    register,
+                    register + len(expected) - 1,
+                )
+                return (True, True)
+
+            read_slice = list(read_back[:len(expected)])
+            if read_slice == expected:
+                if attempt > 0:
+                    logger.info(
+                        "[WRITE_MULTI VERIFY] Registers %d-%d verified on retry %d (values=%s)",
+                        register,
+                        register + len(expected) - 1,
+                        attempt + 1,
+                        expected,
+                    )
+                else:
+                    logger.debug(
+                        "[WRITE_MULTI VERIFY] Registers %d-%d verified (values=%s)",
+                        register,
+                        register + len(expected) - 1,
+                        expected,
+                    )
+                return (True, True)
+
+            logger.warning(
+                "[WRITE_MULTI VERIFY] Registers %d-%d: wrote %s but read back %s "
+                "(attempt %d/%d). Value reverted — possible causes: ShineWiFi/cloud "
+                "override, inverter firmware rejecting the block, or prerequisite "
+                "settings not enabled.",
+                register,
+                register + len(expected) - 1,
+                expected,
+                read_slice,
+                attempt + 1,
+                WRITE_VERIFY_MAX_RETRIES,
+            )
+
+            if attempt < WRITE_VERIFY_MAX_RETRIES - 1:
+                time.sleep(WRITE_VERIFY_RETRY_DELAY)
+
+        logger.error(
+            "[WRITE_MULTI VERIFY] Registers %d-%d: values %s reverted %d time(s) after writing.",
+            register,
+            register + len(expected) - 1,
+            expected,
+            WRITE_VERIFY_MAX_RETRIES,
+        )
+        return (True, False)
+
     def write_registers(self, register: int, values: list) -> bool:
         """
         Write multiple consecutive holding registers (Modbus function 0x10).

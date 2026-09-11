@@ -21,6 +21,30 @@ from .growatt_modbus import ModbusWriteError
 
 _LOGGER = logging.getLogger(__name__)
 
+GROUPED_REGISTER_WRITES = {
+    # MIN/TL-XH priority-mode settings are accepted more reliably as the
+    # documented power/SOC register pairs.
+    'grid_first_discharge_power_rate': (3036, ['grid_first_discharge_power_rate', 'grid_first_discharge_stopped_soc']),
+    'grid_first_discharge_stopped_soc': (3036, ['grid_first_discharge_power_rate', 'grid_first_discharge_stopped_soc']),
+    'batt_first_charge_power_rate': (3047, ['batt_first_charge_power_rate', 'batt_first_charge_stopped_soc']),
+    'batt_first_charge_stopped_soc': (3047, ['batt_first_charge_power_rate', 'batt_first_charge_stopped_soc']),
+    # VPP SOC limits are consecutive in protocol v2.01; preserve the adjacent
+    # values when changing one of them.
+    'vpp_charge_cutoff_soc': (30404, ['vpp_charge_cutoff_soc', 'vpp_discharge_cutoff_soc', 'vpp_load_priority_discharge_cutoff_soc']),
+    'vpp_discharge_cutoff_soc': (30404, ['vpp_charge_cutoff_soc', 'vpp_discharge_cutoff_soc', 'vpp_load_priority_discharge_cutoff_soc']),
+    'vpp_load_priority_discharge_cutoff_soc': (30404, ['vpp_charge_cutoff_soc', 'vpp_discharge_cutoff_soc', 'vpp_load_priority_discharge_cutoff_soc']),
+}
+
+GROUPED_REGISTER_DEFAULTS = {
+    'grid_first_discharge_power_rate': 100,
+    'grid_first_discharge_stopped_soc': 10,
+    'batt_first_charge_power_rate': 100,
+    'batt_first_charge_stopped_soc': 100,
+    'vpp_charge_cutoff_soc': 100,
+    'vpp_discharge_cutoff_soc': 10,
+    'vpp_load_priority_discharge_cutoff_soc': 10,
+}
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -273,11 +297,15 @@ class GrowattGenericNumber(CoordinatorEntity, NumberEntity):
                         register,
                     )
 
-            write_ok, verified = await self.hass.async_add_executor_job(
-                self.coordinator.modbus_client.write_register_verified,
-                register,
-                raw_value,
-            )
+            grouped_write = await self._async_write_grouped_value(raw_value)
+            if grouped_write is not None:
+                write_ok, verified = grouped_write
+            else:
+                write_ok, verified = await self.hass.async_add_executor_job(
+                    self.coordinator.modbus_client.write_register_verified,
+                    register,
+                    raw_value,
+                )
         except ModbusWriteError:
             _LOGGER.error("Failed to write %s (register %d)", self._control_name, register)
             return
@@ -292,6 +320,49 @@ class GrowattGenericNumber(CoordinatorEntity, NumberEntity):
                 )
             self.coordinator.track_write(register, raw_value, self._control_name)
             await self.coordinator.async_request_refresh()
+
+    async def _async_write_grouped_value(self, raw_value: int) -> tuple | None:
+        """Write this control as part of a small consecutive register block."""
+        group = GROUPED_REGISTER_WRITES.get(self._control_name)
+        if group is None:
+            return None
+
+        start_register, control_names = group
+        holding_registers = self.coordinator.modbus_client.register_map.get('holding_registers', {})
+        if any((start_register + offset) not in holding_registers for offset in range(len(control_names))):
+            return None
+
+        current_values = await self.hass.async_add_executor_job(
+            self.coordinator.modbus_client.read_holding_registers,
+            start_register,
+            len(control_names),
+        )
+
+        if current_values is None:
+            data = self.coordinator.data
+            values = [
+                int(getattr(data, control_name, GROUPED_REGISTER_DEFAULTS[control_name]))
+                if data is not None else GROUPED_REGISTER_DEFAULTS[control_name]
+                for control_name in control_names
+            ]
+        else:
+            values = [int(value) for value in current_values[:len(control_names)]]
+
+        values[control_names.index(self._control_name)] = raw_value
+
+        _LOGGER.debug(
+            "Writing %s through grouped registers %d-%d: %s",
+            self._control_name,
+            start_register,
+            start_register + len(values) - 1,
+            values,
+        )
+
+        return await self.hass.async_add_executor_job(
+            self.coordinator.modbus_client.write_registers_verified,
+            start_register,
+            values,
+        )
 
 
 # Legacy class for backwards compatibility (remove in future version)
