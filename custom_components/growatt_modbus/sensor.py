@@ -1617,13 +1617,17 @@ class GrowattModbusSensor(CoordinatorEntity, SensorEntity):
             from .const import get_derating_name
             return get_derating_name(int(value))
 
-        # TL-XH uses register 3018 for priority mode with a different field and value map
-        # (0=Load First, 2=Battery First, 3=Grid First) vs SPH (0=Load First, 1=Battery First, 2=Grid First)
-        if self._sensor_key == "priority_mode" and inverter_series.startswith("min_tl_xh_"):
+        # TL-XH/MIN TL-XH uses holding register 3018 for priority mode with a
+        # different value map vs SPH (0=Load First, 1=Battery First, 2=Grid First).
+        # Use the actual active register map name instead of the stored options
+        # profile, because older config entries may keep a display/alias key here.
+        client = self.coordinator.modbus_client
+        register_map_name = (client.register_map_name if client else "").upper()
+        if self._sensor_key == "priority_mode" and "TL_XH" in register_map_name:
             tl_xh_value = getattr(data, "tl_xh_priority_mode", None)
             if tl_xh_value is None:
                 return None
-            tl_xh_map = {0: "Load First", 2: "Battery First", 3: "Grid First"}
+            tl_xh_map = {0: "Load First", 1: "PV First", 2: "Battery First", 3: "Grid First"}
             return tl_xh_map.get(int(tl_xh_value), f"Unknown ({tl_xh_value})")
 
         # Apply value map if defined (returns named string instead of raw integer)
