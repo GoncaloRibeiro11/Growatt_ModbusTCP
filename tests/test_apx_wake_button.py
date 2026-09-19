@@ -78,10 +78,28 @@ def test_wake_pulse_is_low_bounded_and_restores_previous_state():
     }
 
 
-def test_existing_remote_control_is_never_overwritten():
+def test_stale_remote_control_is_cleared_before_wake():
     client = _FakeClient(remote_enabled=1)
+    sleeps = []
 
-    with pytest.raises(_wake.BatteryWakeError, match="already active"):
+    _wake.wake_apx_battery(client, sleep_fn=sleeps.append)
+
+    assert sleeps == [12]
+    assert client.writes[0] == (30407, 0, True)
+    assert (30100, 1, False) in client.writes
+    assert client.registers == {
+        30100: 0,
+        30407: 0,
+        30408: 45,
+        30409: 37,
+        30410: 1,
+    }
+
+
+def test_active_vpp_session_is_never_overwritten():
+    client = _FakeClient(authority=1, remote_enabled=1)
+
+    with pytest.raises(_wake.BatteryWakeError, match="authority is already active"):
         _wake.wake_apx_battery(client, sleep_fn=lambda _: None)
 
     assert client.writes == []

@@ -63,9 +63,18 @@ def wake_apx_battery(
                 )
 
             if original_remote[0] != 0:
-                raise BatteryWakeError(
-                    "VPP remote power control is already active; wake pulse not applied"
-                )
+                # An interrupted older wake attempt can leave 30407 set while
+                # authority is already back at zero. In that state the command
+                # is inert, but it must be cleared before a new bounded pulse.
+                cleanup_required = True
+                if not client.write_register(
+                    VPP_REMOTE_POWER_ENABLE,
+                    0,
+                    bypass_rate_limit=True,
+                ):
+                    raise BatteryWakeError(
+                        "Stale VPP remote power control could not be cleared"
+                    )
 
             # From the first write onward, cleanup is required even if a response
             # is lost: the inverter may have accepted a write the client did not see.
