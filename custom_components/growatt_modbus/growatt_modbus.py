@@ -6080,7 +6080,10 @@ class GrowattModbus:
                 if pm_regs is not None and len(pm_regs) >= 1:
                     data.tl_xh_priority_mode = int(pm_regs[0])
                     logger.debug("[TL-XH CTRL] tl_xh_priority_mode=%s", data.tl_xh_priority_mode)
+                else:
+                    data.unread_fields.add('tl_xh_priority_mode')
             except Exception as e:
+                data.unread_fields.add('tl_xh_priority_mode')
                 logger.debug(f"Could not read tl_xh_priority_mode register 3018: {e}")
 
         # TL-XH / MOD Battery First charge stopped SOC (register 3048)

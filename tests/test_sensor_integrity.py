@@ -202,3 +202,31 @@ def test_no_two_sensors_share_a_display_name():
         "entity with a _2 suffix wherever both are enabled:\n  "
         + "\n  ".join(f"{n!r}: {keys}" for n, keys in collisions.items())
     )
+
+
+def test_tl_xh_priority_sensor_uses_tl_xh_register():
+    """TL-XH priority readout must mirror the writable 3018 select.
+
+    The generic priority_mode field is for SPH/WIT-style maps. On TL-XH/MIN TL-XH,
+    the user-facing priority select writes 3018 (tl_xh_priority_mode), so the
+    read-only "Priority Mode" sensor must publish the same backing value.
+    """
+    source = (COMPONENT_DIR / "sensor.py").read_text(encoding="utf-8")
+
+    assert 'self._sensor_key == "priority_mode" and "tl_xh_" in inverter_series' in source
+    assert 'getattr(data, "tl_xh_priority_mode", None)' in source
+    assert 'WRITABLE_REGISTERS["tl_xh_priority_mode"]["options"]' in source
+
+    tl_xh_override = source.index('self._sensor_key == "priority_mode" and "tl_xh_"')
+    generic_unread_guard = source.index('if attr in getattr(data, "unread_fields", ()):')
+    assert tl_xh_override < generic_unread_guard
+
+
+def test_tl_xh_priority_read_failure_is_unknown_not_default():
+    """A failed 3018 read must not publish GrowattData's default priority."""
+    source = (COMPONENT_DIR / "growatt_modbus.py").read_text(encoding="utf-8")
+    block_start = source.index("# MIN TL-XH Priority Mode")
+    block_end = source.index("# TL-XH / MOD Battery First charge stopped SOC")
+    block = source[block_start:block_end]
+
+    assert "data.unread_fields.add('tl_xh_priority_mode')" in block

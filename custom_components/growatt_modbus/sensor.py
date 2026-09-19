@@ -29,6 +29,7 @@ from .const import (
     DOMAIN,
     CONF_INVERTER_SERIES,
     CONF_INVERT_GRID_POWER,
+    WRITABLE_REGISTERS,
     get_device_type_for_sensor,
     get_entity_category,
     offgrid_grid_connection_status,
@@ -2195,6 +2196,19 @@ class GrowattModbusSensor(GrowattEntity, SensorEntity):
         
         # Regular sensor - get value from data attribute
         attr = self._sensor_def["attr"]
+
+        # MIN/TL-XH reports its battery priority in holding register 3018,
+        # exposed as tl_xh_priority_mode. The generic priority_mode field belongs
+        # to SPH/WIT-style maps and can stay at a stale/default value, which makes
+        # the read-only sensor disagree with the TL-XH priority select (#400/#405).
+        if self._sensor_key == "priority_mode" and "tl_xh_" in inverter_series:
+            if "tl_xh_priority_mode" in getattr(data, "unread_fields", ()):
+                return None
+            tl_xh_value = getattr(data, "tl_xh_priority_mode", None)
+            if tl_xh_value is None:
+                return None
+            options = WRITABLE_REGISTERS["tl_xh_priority_mode"]["options"]
+            return options.get(int(tl_xh_value), f"Unknown ({tl_xh_value})")
 
         # Report nothing when the register behind this sensor was not read this poll (#384).
         #
