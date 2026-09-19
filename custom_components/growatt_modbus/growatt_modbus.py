@@ -1636,7 +1636,10 @@ class GrowattModbus:
             logger.debug(f"[WRITE] Request to write register {register} with value {value}")
 
             # WIT control rate limiting (v0.4.6) - prevent oscillation
-            if register in self._wit_control_registers:
+            # Stopping a timed remote-power command is a safety action and must
+            # never be blocked by the normal anti-oscillation cooldown.
+            is_remote_power_stop = register == 30407 and value == 0
+            if register in self._wit_control_registers and not is_remote_power_stop:
                 import time
                 current_time = time.time()
                 last_write_time = self._wit_control_last_write.get(register, 0)

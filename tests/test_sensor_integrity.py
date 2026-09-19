@@ -173,3 +173,41 @@ def test_tl_xh_priority_read_failure_is_unknown_not_default():
     block = source[block_start:block_end]
 
     assert "data.unread_fields.add('tl_xh_priority_mode')" in block
+
+
+def test_tl_xh_battery_wake_is_short_and_self_releasing():
+    """The APX wake command must use low power and always release VPP control."""
+    source = _read("battery_wake.py")
+
+    assert "WAKE_POWER_PERCENT = 5" in source
+    assert "WAKE_PULSE_SECONDS = 12" in source
+    assert "finally:" in source
+    assert "VPP_REMOTE_POWER_ENABLE," in source
+    assert "0," in source
+    assert "if stopped_successfully:" in source
+
+
+def test_battery_first_triggers_apx_wake():
+    """Selecting Battery First should wake a sleeping APX after register 3018 sticks."""
+    source = _read("select.py")
+
+    assert "self._control_name == 'tl_xh_priority_mode' and value == 2 and verified" in source
+    assert "await async_wake_tl_xh_battery(self.hass, self.coordinator)" in source
+
+
+def test_remote_power_stop_bypasses_control_cooldown():
+    """The 30407=0 safety write must not be rejected by the WIT cooldown."""
+    source = _read("growatt_modbus.py")
+
+    assert "is_remote_power_stop = register == 30407 and value == 0" in source
+    assert "and not is_remote_power_stop" in source
+
+
+def test_wake_button_platform_is_registered():
+    """The explicit APX wake control must be loaded as a Home Assistant button."""
+    init_source = _read("__init__.py")
+    button_source = _read("button.py")
+
+    assert "Platform.BUTTON" in init_source
+    assert "class GrowattWakeBatteryButton" in button_source
+    assert "is_tl_xh_battery_wake_supported(coordinator)" in button_source

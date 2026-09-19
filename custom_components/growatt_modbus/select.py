@@ -20,6 +20,7 @@ from .const import (
 )
 from .coordinator import GrowattModbusCoordinator
 from .growatt_modbus import ModbusWriteError
+from .battery_wake import BatteryWakeError, async_wake_tl_xh_battery
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -302,6 +303,19 @@ class GrowattGenericSelect(CoordinatorEntity, SelectEntity):
                     self._control_name,
                 )
             self.coordinator.track_write(register_addr, value, self._control_name)
+
+            # Priority register 3018 selects Battery First but does not always
+            # assert the physical WAKE line used by a sleeping APX battery.
+            # A short, self-releasing VPP charge request mirrors the behaviour
+            # observed when Growatt's cloud applies a charging schedule.
+            if self._control_name == 'tl_xh_priority_mode' and value == 2 and verified:
+                try:
+                    await async_wake_tl_xh_battery(self.hass, self.coordinator)
+                except BatteryWakeError as exc:
+                    _LOGGER.warning(
+                        "Battery First was selected, but the APX wake pulse failed: %s",
+                        exc,
+                    )
 
             # WIT: restore export_limit_mode after re-enabling control authority
             if self._control_name == 'control_authority' and is_wit and value == 1:
