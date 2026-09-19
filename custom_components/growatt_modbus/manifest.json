@@ -1,18 +1,18 @@
 {
   "domain": "growatt_modbus",
-  "name": "Growatt Modbus",
+  "name": "Growatt Modbus Goncalo",
   "codeowners": [
-    "@0xAHA"
+    "@GoncaloRibeiro11"
   ],
   "config_flow": true,
   "dependencies": [],
-  "documentation": "https://github.com/0xAHA/Growatt_ModbusTCP",
+  "documentation": "https://github.com/GoncaloRibeiro11/Growatt_ModbusTCP",
   "integration_type": "device",
   "iot_class": "local_polling",
-  "issue_tracker": "https://github.com/0xAHA/Growatt_ModbusTCP/issues",
+  "issue_tracker": "https://github.com/GoncaloRibeiro11/Growatt_ModbusTCP/issues",
   "requirements": [
     "pymodbus>=3.0.0",
     "pyserial>=3.4"
   ],
-  "version": "2.0.4-b25"
+  "version": "2.0.4-b28"
 }
