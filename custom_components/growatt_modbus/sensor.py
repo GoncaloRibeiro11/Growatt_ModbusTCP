@@ -28,6 +28,7 @@ from .const import (
     DOMAIN,
     CONF_INVERTER_SERIES,
     CONF_INVERT_GRID_POWER,
+    WRITABLE_REGISTERS,
     get_device_type_for_sensor,
     get_entity_category,
 )
@@ -1594,6 +1595,24 @@ class GrowattModbusSensor(CoordinatorEntity, SensorEntity):
 
             return self.coordinator.get_sensor_value(self._sensor_key, pv_energy_today)
         
+        # TL-XH/MIN TL-XH reports its battery priority in holding register 3018,
+        # exposed as tl_xh_priority_mode. The generic priority_mode field belongs
+        # to SPH/WIT-style maps and can stay at a stale/default value, which makes
+        # the read-only sensor disagree with the TL-XH priority select (#400/#405).
+        client = self.coordinator.modbus_client
+        register_map_name = (client.register_map_name if client else "").lower()
+        if (
+            self._sensor_key == "priority_mode"
+            and ("tl_xh_" in inverter_series or "tl_xh_" in register_map_name)
+        ):
+            if "tl_xh_priority_mode" in getattr(data, "unread_fields", ()):
+                return None
+            tl_xh_value = getattr(data, "tl_xh_priority_mode", None)
+            if tl_xh_value is None:
+                return None
+            options = WRITABLE_REGISTERS["tl_xh_priority_mode"]["options"]
+            return options.get(int(tl_xh_value), f"Unknown ({tl_xh_value})")
+
         # Regular sensor - get value from data attribute
         value = getattr(data, self._sensor_def["attr"], None)
         
@@ -1616,19 +1635,6 @@ class GrowattModbusSensor(CoordinatorEntity, SensorEntity):
         if self._sensor_key == "derating_mode":
             from .const import get_derating_name
             return get_derating_name(int(value))
-
-        # TL-XH/MIN TL-XH uses holding register 3018 for priority mode with a
-        # different value map vs SPH (0=Load First, 1=Battery First, 2=Grid First).
-        # Use the actual active register map name instead of the stored options
-        # profile, because older config entries may keep a display/alias key here.
-        client = self.coordinator.modbus_client
-        register_map_name = (client.register_map_name if client else "").upper()
-        if self._sensor_key == "priority_mode" and "TL_XH" in register_map_name:
-            tl_xh_value = getattr(data, "tl_xh_priority_mode", None)
-            if tl_xh_value is None:
-                return None
-            tl_xh_map = {0: "Load First", 1: "PV First", 2: "Battery First", 3: "Grid First"}
-            return tl_xh_map.get(int(tl_xh_value), f"Unknown ({tl_xh_value})")
 
         # Apply value map if defined (returns named string instead of raw integer)
         if "value_map" in self._sensor_def:

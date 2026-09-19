@@ -2699,7 +2699,10 @@ class GrowattModbus:
                 if tl_xh_mode_regs is not None and len(tl_xh_mode_regs) >= 1:
                     data.tl_xh_priority_mode = int(tl_xh_mode_regs[0])
                     logger.debug("[TL-XH CTRL] tl_xh_priority_mode=%s", data.tl_xh_priority_mode)
+                else:
+                    data.unread_fields.add('tl_xh_priority_mode')
             except Exception as e:
+                data.unread_fields.add('tl_xh_priority_mode')
                 logger.debug(f"Could not read tl_xh_priority_mode register 3018: {e}")
 
         # --- SPF Off-Grid Controls --- Read if present in profile

@@ -151,3 +151,25 @@ def test_device_map_has_no_unknown_undefined_sensors() -> None:
         f"KNOWN_MAP_WITHOUT_DEF has stale entries that are now defined "
         f"({len(stale)}): {sorted(stale)}.  Remove them from the allowlist."
     )
+
+
+def test_tl_xh_priority_sensor_uses_tl_xh_register():
+    """TL-XH priority readout must mirror the writable 3018 select."""
+    source = (COMPONENT_DIR / "sensor.py").read_text(encoding="utf-8")
+
+    assert 'getattr(data, "tl_xh_priority_mode", None)' in source
+    assert 'WRITABLE_REGISTERS["tl_xh_priority_mode"]["options"]' in source
+
+    tl_xh_override = source.index('self._sensor_key == "priority_mode"')
+    generic_value_read = source.index('value = getattr(data, self._sensor_def["attr"], None)')
+    assert tl_xh_override < generic_value_read
+
+
+def test_tl_xh_priority_read_failure_is_unknown_not_default():
+    """A failed 3018 read must not publish GrowattData's default priority."""
+    source = (COMPONENT_DIR / "growatt_modbus.py").read_text(encoding="utf-8")
+    block_start = source.index("# TL-XH/MIN TL-XH Work Mode")
+    block_end = source.index("# --- SPF Off-Grid Controls ---")
+    block = source[block_start:block_end]
+
+    assert "data.unread_fields.add('tl_xh_priority_mode')" in block
