@@ -485,7 +485,8 @@ MIN_TL_XH_3000_10000_V201 = {
         30200: {'name': 'export_limit_enable',     'scale': 1,   'unit': '', 'access': 'RW'},
         30201: {'name': 'export_limit_power_rate', 'scale': 0.1, 'unit': '%', 'access': 'RW'},
 
-        # EMS controls — Priority mode and Battery First / Grid First power and SOC limits (V1.39, Issues #311)
+        # EMS controls — Priority mode, TOU periods and Battery First / Grid First limits
+        # (V1.39, Issues #311 and #400).
         # Register 3018: hardware-confirmed on MIN 4200TL-XH (0=Load First, 2=Battery First, 3=Grid First)
         #
         # maps_to feeds profile_register_names() (#448) so diagnostics correctly lists
@@ -496,10 +497,51 @@ MIN_TL_XH_3000_10000_V201 = {
         3018: {'name': 'tl_xh_priority_mode', 'maps_to': 'priority_mode',
                'scale': 1, 'unit': '', 'access': 'RW',
                'desc': 'Priority mode (0=Load First, 2=Battery First, 3=Grid First — hardware confirmed MIN TL-XH)'},
+        # The first word of each TOU pair packs enable (bit 15), priority (bits
+        # 13-14), hour (bits 8-12) and minute (bits 0-7). The second word is the
+        # packed end time. These share the MOD encoding and entity implementation.
+        3038: {'name': 'mod_tou_1_start', 'scale': 1, 'unit': '', 'access': 'RW',
+               'desc': 'TOU Period 1 start: bit15=enable, bit13-14=priority, bit8-12=hour, bit0-7=min'},
+        3039: {'name': 'mod_tou_1_end',   'scale': 1, 'unit': '', 'access': 'RW',
+               'desc': 'TOU Period 1 end: bit8-12=hour, bit0-7=min'},
+        3040: {'name': 'mod_tou_2_start', 'scale': 1, 'unit': '', 'access': 'RW',
+               'desc': 'TOU Period 2 start: bit15=enable, bit13-14=priority, bit8-12=hour, bit0-7=min'},
+        3041: {'name': 'mod_tou_2_end',   'scale': 1, 'unit': '', 'access': 'RW',
+               'desc': 'TOU Period 2 end: bit8-12=hour, bit0-7=min'},
+        3042: {'name': 'mod_tou_3_start', 'scale': 1, 'unit': '', 'access': 'RW',
+               'desc': 'TOU Period 3 start: bit15=enable, bit13-14=priority, bit8-12=hour, bit0-7=min'},
+        3043: {'name': 'mod_tou_3_end',   'scale': 1, 'unit': '', 'access': 'RW',
+               'desc': 'TOU Period 3 end: bit8-12=hour, bit0-7=min'},
+        3044: {'name': 'mod_tou_4_start', 'scale': 1, 'unit': '', 'access': 'RW',
+               'desc': 'TOU Period 4 start: bit15=enable, bit13-14=priority, bit8-12=hour, bit0-7=min'},
+        3045: {'name': 'mod_tou_4_end',   'scale': 1, 'unit': '', 'access': 'RW',
+               'desc': 'TOU Period 4 end: bit8-12=hour, bit0-7=min'},
         3047: {'name': 'batt_first_charge_power_rate',    'scale': 1, 'unit': '%', 'access': 'RW',
                'valid_range': (1, 100), 'desc': 'Charge power rate when Battery First mode (1-100%)'},
         3048: {'name': 'batt_first_charge_stopped_soc',   'scale': 1, 'unit': '%', 'access': 'RW',
                'valid_range': (0, 100), 'desc': 'SOC to stop charging when Battery First mode is active (0-100%)'},
+        3049: {'name': 'allow_grid_charge', 'scale': 1, 'unit': '', 'access': 'RW',
+               'desc': 'Allow Grid Charge — required when Battery First periods should charge from AC'},
+        3050: {'name': 'mod_tou_5_start', 'scale': 1, 'unit': '', 'access': 'RW',
+               'desc': 'TOU Period 5 start: bit15=enable, bit13-14=priority, bit8-12=hour, bit0-7=min'},
+        3051: {'name': 'mod_tou_5_end',   'scale': 1, 'unit': '', 'access': 'RW',
+               'desc': 'TOU Period 5 end: bit8-12=hour, bit0-7=min'},
+        3052: {'name': 'mod_tou_6_start', 'scale': 1, 'unit': '', 'access': 'RW',
+               'desc': 'TOU Period 6 start: bit15=enable, bit13-14=priority, bit8-12=hour, bit0-7=min'},
+        3053: {'name': 'mod_tou_6_end',   'scale': 1, 'unit': '', 'access': 'RW',
+               'desc': 'TOU Period 6 end: bit8-12=hour, bit0-7=min'},
+        3054: {'name': 'mod_tou_7_start', 'scale': 1, 'unit': '', 'access': 'RW',
+               'desc': 'TOU Period 7 start: bit15=enable, bit13-14=priority, bit8-12=hour, bit0-7=min'},
+        3055: {'name': 'mod_tou_7_end',   'scale': 1, 'unit': '', 'access': 'RW',
+               'desc': 'TOU Period 7 end: bit8-12=hour, bit0-7=min'},
+        3056: {'name': 'mod_tou_8_start', 'scale': 1, 'unit': '', 'access': 'RW',
+               'desc': 'TOU Period 8 start: bit15=enable, bit13-14=priority, bit8-12=hour, bit0-7=min'},
+        3057: {'name': 'mod_tou_8_end',   'scale': 1, 'unit': '', 'access': 'RW',
+               'desc': 'TOU Period 8 end: bit8-12=hour, bit0-7=min'},
+        3058: {'name': 'mod_tou_9_start', 'scale': 1, 'unit': '', 'access': 'RW',
+               'desc': 'TOU Period 9 start: bit15=enable, bit13-14=priority, bit8-12=hour, bit0-7=min'},
+        3059: {'name': 'mod_tou_9_end',   'scale': 1, 'unit': '', 'access': 'RW',
+               'desc': 'TOU Period 9 end: bit8-12=hour, bit0-7=min'},
         3067: {'name': 'grid_first_discharge_stopped_soc', 'scale': 1, 'unit': '%', 'access': 'RW',
                'valid_range': (1, 100), 'desc': 'SOC to stop discharging when Grid First mode is active (V1.39: US model / firmware ZACA-08+)'},
 

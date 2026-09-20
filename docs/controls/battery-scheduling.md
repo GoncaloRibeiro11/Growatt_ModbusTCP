@@ -31,7 +31,7 @@ your hardware will save significant debugging time.
 | **SPH GEN3** | Global priority + up to 9 extended time slots | Persistent | None |
 | **WIT TL3** | VPP remote overrides (time-limited) | Timed only | Register 30100 must be **Enabled** |
 | **SPF** | Output priority + charge source | Persistent | None |
-| **MIN TL-XH** | Simple priority mode | Persistent | None |
+| **MIN TL-XH** | TOU schedule, 9 time slots + reported priority | Persistent | Register 3049 controls grid charging |
 
 > **Grid-tied models (MIN TL-X, MIC, MID)** have no battery controls and are not covered here.
 
@@ -618,11 +618,25 @@ data:
 
 **Applies to:** MIN 3000–10000 TL-XH (single-phase hybrid)
 
-MIN TL-XH uses the SPH control register set. The same priority mode (register 1044)
-and time period registers (1100–1108) apply.
+The first-generation MIN TL-XH uses the same packed 9-slot schedule as MOD GEN4:
+registers 3038–3045 and 3050–3059. Each start register contains the enable bit,
+priority and start time; the following register contains the end time. Register 3049
+controls whether a Battery Priority period may charge from the grid.
 
-See [SPH GEN3 — Extended Time Periods](#sph-gen3--extended-time-periods) above for the
-full entity reference.
+Register 3018 reports the configured priority (`0` Load First, `2` Battery First,
+`3` Grid First), but it does not enable a schedule period. A select and the generic
+Priority Mode sensor can therefore both display Battery First while the inverter still
+runs normal self-consumption because every Battery Priority period is disabled.
+
+Use the controls documented under [MOD GEN4 — TOU Schedule (9 Slots)](#mod-gen4--tou-schedule-9-slots):
+
+- Set the start and end of the period.
+- Choose Battery Priority, Load Priority or Grid Priority for that period.
+- Set the period to Enabled.
+- Enable Allow Grid Charge only when Battery Priority should also charge from AC.
+
+Unused periods should remain Disabled. MIN TL-XH2 is VPP-only and does not use these
+3000-range registers.
 
 ---
 
