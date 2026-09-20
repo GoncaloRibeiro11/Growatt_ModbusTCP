@@ -94,6 +94,11 @@ _VPP_HOLDING_FAIL_THRESHOLD = 3
 ERROR_KIND_LINK = "link"
 ERROR_KIND_NO_RESPONSE = "no-response"
 
+# MIN TL-XH holding 3018 uses a different numeric encoding from the common
+# priority_mode sensor. Keep the raw value for the writable select and translate it for
+# the existing diagnostic sensor so both entities report the same inverter state.
+TL_XH_PRIORITY_MODE_TO_STANDARD = {0: 0, 2: 1, 3: 2}
+
 
 def _peer_closed_the_connection(exc: Exception) -> bool:
     """True when the failure was the far end hanging up, not failing to answer.
@@ -6113,7 +6118,13 @@ class GrowattModbus:
             try:
                 pm_regs = self.read_holding_registers(3018, 1)
                 if pm_regs is not None and len(pm_regs) >= 1:
-                    data.tl_xh_priority_mode = int(pm_regs[0])
+                    raw_priority_mode = int(pm_regs[0])
+                    data.tl_xh_priority_mode = raw_priority_mode
+                    standard_priority_mode = TL_XH_PRIORITY_MODE_TO_STANDARD.get(
+                        raw_priority_mode
+                    )
+                    if standard_priority_mode is not None:
+                        data.priority_mode = standard_priority_mode
                     logger.debug("[TL-XH CTRL] tl_xh_priority_mode=%s", data.tl_xh_priority_mode)
             except Exception as e:
                 logger.debug(f"Could not read tl_xh_priority_mode register 3018: {e}")
